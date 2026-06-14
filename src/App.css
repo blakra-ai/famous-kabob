@@ -1,0 +1,281 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Amiri:ital,wght@0,400;0,700;1,400&family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --lapis: #1a2a52;
+  --lapis-deep: #131f3d;
+  --lapis-light: #243a6e;
+  --saffron: #e3a72f;
+  --saffron-soft: #f0c668;
+  --ruby: #9c2230;
+  --ruby-soft: #b8434f;
+  --ivory: #f4ead5;
+  --parchment: #d4c5a0;
+  --teal: #2d6a5f;
+  --ink: #0f1830;
+  --header-height: 120px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--lapis-deep);
+  color: var(--ivory);
+  overflow-x: hidden;
+}
+
+body[dir="rtl"] {
+  direction: rtl;
+  font-family: 'Vazirmatn', 'Inter', sans-serif;
+}
+
+a { color: inherit; }
+
+/* ============ HEADER ============ */
+.site-header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-height);
+  background: linear-gradient(180deg, var(--lapis-deep) 0%, var(--lapis) 100%);
+  border-bottom: 1px solid rgba(227, 167, 47, 0.35);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.site-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 6px;
+  background-image:
+    linear-gradient(90deg, transparent 0%, var(--saffron) 50%, transparent 100%),
+    repeating-linear-gradient(90deg, transparent 0 18px, rgba(227, 167, 47, 0.4) 18px 19px);
+  background-size: 100% 1px, 100% 6px;
+  background-repeat: no-repeat, repeat-x;
+  background-position: bottom, top;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.header-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  padding: 22px 0 10px;
+  flex: 1;
+}
+
+.nav-link {
+  color: var(--ivory);
+  text-decoration: none;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  padding: 6px 2px;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  width: 0; height: 1px;
+  background: var(--saffron);
+  transition: width 0.35s ease, left 0.35s ease;
+}
+
+.nav-link:hover, .nav-link.active { color: var(--saffron); }
+.nav-link:hover::after, .nav-link.active::after { width: 100%; left: 0; }
+
+.lang-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border-top: 1px solid rgba(227, 167, 47, 0.18);
+}
+
+.lang-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(244, 234, 213, 0.65);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-radius: 2px;
+}
+
+.lang-btn:hover { color: var(--saffron); }
+.lang-btn.active {
+  color: var(--saffron);
+  border-color: rgba(227, 167, 47, 0.4);
+  background: rgba(227, 167, 47, 0.08);
+}
+
+.lang-bar span { color: rgba(227, 167, 47, 0.3); }
+
+.main-content { padding-top: var(--header-height); background: var(--lapis-deep); }
+
+/* ============ FOOTER ============ */
+.site-footer {
+  background: var(--lapis-deep);
+  color: var(--ivory);
+  text-align: center;
+  padding: 4rem 2rem 2.5rem;
+  position: relative;
+  border-top: 1px solid rgba(227, 167, 47, 0.3);
+}
+
+.site-footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background-image:
+    linear-gradient(90deg, transparent 0%, var(--saffron) 50%, transparent 100%),
+    repeating-linear-gradient(90deg, transparent 0 18px, rgba(227, 167, 47, 0.4) 18px 19px);
+  background-size: 100% 1px, 100% 6px;
+  background-repeat: no-repeat, repeat-x;
+  background-position: top, bottom;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 600;
+  color: var(--saffron);
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.footer-social {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 2rem 0 1.5rem;
+}
+
+.footer-social a {
+  color: var(--saffron);
+  text-decoration: none;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid rgba(227, 167, 47, 0.4);
+  border-radius: 999px;
+  transition: all 0.3s;
+  text-transform: uppercase;
+}
+
+.footer-social a:hover {
+  background: var(--saffron);
+  color: var(--lapis-deep);
+  border-color: var(--saffron);
+}
+
+/* ============ SHARED ============ */
+.eyebrow {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--saffron);
+  margin-bottom: 1rem;
+}
+
+.eyebrow.dark { color: var(--ruby); }
+
+/* ============ MOBILE RESPONSIVE FIXES ============ */
+@media (max-width: 768px) {
+  :root { 
+    --header-height: 105px; 
+  }
+  
+  /* CRITICAL FIX: Prevent navigation wrapping */
+  .header-nav { 
+    gap: 18px; 
+    padding: 12px 15px 6px; 
+    flex-wrap: nowrap; /* Keeps all nav items on one line */
+    overflow-x: auto; /* Allows horizontal scrolling if needed */
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hide scrollbar */
+    justify-content: flex-start;
+  }
+  
+  .header-nav::-webkit-scrollbar { 
+    display: none; /* Hide scrollbar on Chrome/Safari */
+  }
+  
+  .nav-link { 
+    font-size: 0.85rem; 
+    letter-spacing: 2px; 
+    white-space: nowrap; /* Prevents individual links from breaking */
+    flex-shrink: 0; /* Maintains link width */
+  }
+  
+  .lang-bar {
+    gap: 8px;
+    padding: 6px 0 10px;
+  }
+  
+  .lang-btn { 
+    font-size: 0.75rem; 
+    padding: 3px 8px; 
+    letter-spacing: 1.5px; 
+  }
+}
+
+@media (max-width: 480px) {
+  :root { 
+    --header-height: 100px; 
+  }
+  
+  .header-nav {
+    gap: 15px;
+    padding: 10px 12px 5px;
+  }
+  
+  .nav-link { 
+    font-size: 0.78rem; 
+    letter-spacing: 1.8px; 
+  }
+  
+  .lang-btn { 
+    font-size: 0.72rem; 
+    padding: 3px 6px;
+    letter-spacing: 1px;
+  }
+  
+  .footer-logo { letter-spacing: 5px; }
+}
+
+@media (max-width: 390px) {
+  .nav-link { 
+    font-size: 0.75rem; 
+    letter-spacing: 1.5px; 
+  }
+  
+  .lang-btn {
+    font-size: 0.68rem;
+    padding: 2px 5px;
+  }
+}
