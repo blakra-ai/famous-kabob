@@ -24,7 +24,7 @@ function Contact({ lang = 'en' }) {
   const [phoneError, setPhoneError] = useState('');
   const [timeError, setTimeError] = useState('');
 
-  // Format phone number as user types
+  // Format phone number as user types - EXACTLY 10 digits required
   const formatPhoneNumber = (value) => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 3) return numbers;
@@ -36,11 +36,11 @@ function Contact({ lang = 'en' }) {
     let { name, value } = e.target;
     
     if (name === 'phone') {
-      // Only allow digits, limit to 10
+      // Only allow digits, limit to exactly 10
       const numbers = value.replace(/\D/g, '').slice(0, 10);
       setForm({ ...form, phone: formatPhoneNumber(numbers) });
       
-      // Real-time validation
+      // Real-time validation for exactly 10 digits
       if (numbers.length > 0 && numbers.length < 10) {
         setPhoneError(tx(
           'Phone number must be exactly 10 digits',
@@ -75,10 +75,8 @@ function Contact({ lang = 'en' }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Get raw phone numbers for validation
+    // Validate exactly 10 digits
     const phoneNumbers = form.phone.replace(/\D/g, '');
-    
-    // Validate phone number
     if (phoneNumbers.length !== 10) {
       setStatus({
         submitted: false, sending: false, error: true,
@@ -91,7 +89,7 @@ function Contact({ lang = 'en' }) {
       return;
     }
 
-    // Validate time range
+    // Validate time range 11:00 AM to 8:30 PM
     if (form.time < "11:00" || form.time > "20:30") {
       setStatus({
         submitted: false, sending: false, error: true,
@@ -123,7 +121,6 @@ function Contact({ lang = 'en' }) {
 
       setStatus({ submitted: true, sending: false, error: false, errorMessage: '' });
 
-      // Keep email visible in success message
       const customerEmail = form.email;
       setTimeout(() => {
         setStatus({ submitted: false, sending: false, error: false, errorMessage: '' });
@@ -148,76 +145,162 @@ function Contact({ lang = 'en' }) {
   return (
     <div className="contact-page">
       <style>{`
-        .contact-page { width: 100%; background: var(--lapis-deep); color: var(--ivory); min-height: 100vh; padding: 6rem 1.5rem; }
+        .contact-page { 
+          width: 100%; 
+          background: var(--lapis-deep); 
+          color: var(--ivory); 
+          min-height: 100vh; 
+          padding: 6rem 1.5rem; 
+        }
         .contact-container { 
-          max-width: 800px; margin: 0 auto; 
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(227, 167, 47, 0.28); 
-          padding: 3rem; border-radius: 8px; 
+          max-width: 800px; 
+          margin: 0 auto; 
+          background: rgba(255,255,255,0.03); 
+          border: 1px solid rgba(227, 167, 47, 0.28); 
+          padding: 3rem; 
+          border-radius: 8px; 
         }
         .contact-title { 
-          font-family: 'Cormorant Garamond', serif; color: var(--saffron); 
-          font-size: clamp(2rem, 5vw, 3rem); text-align: center; margin-bottom: 0.5rem; 
-          text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+          font-family: 'Cormorant Garamond', serif; 
+          color: var(--saffron); 
+          font-size: clamp(2rem, 5vw, 3rem); 
+          text-align: center; 
+          margin-bottom: 0.5rem; 
+          text-transform: uppercase; 
+          letter-spacing: 0.05em; 
+          font-weight: 600;
         }
         .contact-sub { 
-          text-align: center; color: var(--parchment); font-style: italic; margin-bottom: 2rem; 
-          font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; 
+          text-align: center; 
+          color: var(--parchment); 
+          font-style: italic; 
+          margin-bottom: 2rem; 
+          font-family: 'Cormorant Garamond', serif; 
+          font-size: 1.1rem; 
         }
         .success-banner { 
-          background: rgba(45,106,95,0.2); border: 1px solid rgba(45,106,95,0.6); 
-          color: #a9d4c8; padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; 
-          font-family: 'Cormorant Garamond', serif; border-radius: 6px; line-height: 1.7;
+          background: rgba(45,106,95,0.2); 
+          border: 1px solid rgba(45,106,95,0.6); 
+          color: #a9d4c8; 
+          padding: 1.5rem; 
+          text-align: center; 
+          margin-bottom: 1.5rem; 
+          font-family: 'Cormorant Garamond', serif; 
+          border-radius: 6px; 
+          line-height: 1.7;
         }
         .success-banner strong { 
-          display: block; font-size: 1.25rem; margin-bottom: 0.5rem; 
-          font-style: normal; color: #b5e6d8; 
+          display: block; 
+          font-size: 1.25rem; 
+          margin-bottom: 0.5rem; 
+          font-style: normal; 
+          color: #b5e6d8; 
         }
         .error-banner { 
-          background: rgba(156,34,48,0.2); border: 1px solid rgba(156,34,48,0.6); 
-          color: #f4a0a8; padding: 1.25rem; text-align: center; margin-bottom: 1.5rem; 
-          font-family: 'Cormorant Garamond', serif; border-radius: 6px; 
+          background: rgba(156,34,48,0.2); 
+          border: 1px solid rgba(156,34,48,0.6); 
+          color: #f4a0a8; 
+          padding: 1.25rem; 
+          text-align: center; 
+          margin-bottom: 1.5rem; 
+          font-family: 'Cormorant Garamond', serif; 
+          border-radius: 6px; 
         }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.full { grid-column: 1 / -1; }
+        .form-grid { 
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 1.25rem; 
+        }
+        .form-group { 
+          display: flex; 
+          flex-direction: column; 
+        }
+        .form-group.full { 
+          grid-column: 1 / -1; 
+        }
         .form-group label { 
-          font-family: 'Cormorant Garamond', serif; font-style: italic; 
-          font-size: 0.9rem; letter-spacing: 0.1em; text-transform: uppercase; 
-          color: var(--saffron-soft); margin-bottom: 0.5rem; 
+          font-family: 'Cormorant Garamond', serif; 
+          font-style: italic; 
+          font-size: 0.9rem; 
+          letter-spacing: 0.1em; 
+          text-transform: uppercase; 
+          color: var(--saffron-soft); 
+          margin-bottom: 0.5rem; 
         }
         .form-group input, .form-group textarea { 
-          background: rgba(255,255,255,0.08); border: 1px solid rgba(227, 167, 47, 0.4); 
-          border-radius: 6px; color: var(--ivory); padding: 0.85rem 1rem; 
-          font-size: 0.95rem; font-family: 'Inter', sans-serif; width: 100%; 
+          background: rgba(255,255,255,0.08); 
+          border: 1px solid rgba(227, 167, 47, 0.4); 
+          border-radius: 6px; 
+          color: var(--ivory); 
+          padding: 0.85rem 1rem; 
+          font-size: 0.95rem; 
+          font-family: 'Inter', sans-serif; 
+          width: 100%; 
           transition: all 0.3s; 
         }
         .form-group input:focus, .form-group textarea:focus { 
-          outline: none; border-color: var(--saffron); 
+          outline: none; 
+          border-color: var(--saffron); 
           box-shadow: 0 0 0 3px rgba(227, 167, 47, 0.15); 
           background: rgba(255,255,255,0.12); 
         }
-        .form-group input.error { border-color: rgba(156,34,48,0.8); }
-        .field-error { 
-          color: #f4a0a8; font-size: 0.85rem; margin-top: 0.5rem; 
-          font-family: 'Cormorant Garamond', serif; font-style: italic; 
+        .form-group input.error { 
+          border-color: rgba(156,34,48,0.8); 
         }
-        .form-group textarea { resize: vertical; min-height: 100px; }
+        .field-error { 
+          color: #f4a0a8; 
+          font-size: 0.85rem; 
+          margin-top: 0.5rem; 
+          font-family: 'Cormorant Garamond', serif; 
+          font-style: italic; 
+        }
+        .form-group textarea { 
+          resize: vertical; 
+          min-height: 100px; 
+        }
         .time-hint {
-          font-size: 0.8rem; color: var(--saffron-soft); margin-top: 0.3rem;
-          font-family: 'Cormorant Garamond', serif; font-style: italic;
+          font-size: 0.8rem; 
+          color: var(--saffron-soft); 
+          margin-top: 0.3rem;
+          font-family: 'Cormorant Garamond', serif; 
+          font-style: italic;
         }
         .submit-btn { 
-          grid-column: 1 / -1; background: var(--saffron); color: var(--lapis-deep); 
-          border: none; padding: 1rem 2.25rem; font-family: 'Cormorant Garamond', serif; 
-          font-size: 1rem; letter-spacing: 0.25em; text-transform: uppercase; font-weight: 600;
-          cursor: pointer; border-radius: 4px; transition: all 0.3s; margin-top: 1rem; 
-          display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+          grid-column: 1 / -1; 
+          background: var(--saffron); 
+          color: var(--lapis-deep); 
+          border: none; 
+          padding: 1rem 2.25rem; 
+          font-family: 'Cormorant Garamond', serif; 
+          font-size: 1rem; 
+          letter-spacing: 0.25em; 
+          text-transform: uppercase; 
+          font-weight: 600;
+          cursor: pointer; 
+          border-radius: 4px; 
+          transition: all 0.3s; 
+          margin-top: 1rem; 
+          display: inline-flex; 
+          align-items: center; 
+          justify-content: center; 
+          gap: 0.5rem;
         }
-        .submit-btn:hover:not(:disabled) { background: var(--saffron-soft); transform: translateY(-2px); }
-        .submit-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .submit-btn:hover:not(:disabled) { 
+          background: var(--saffron-soft); 
+          transform: translateY(-2px); 
+        }
+        .submit-btn:disabled { 
+          opacity: 0.7; 
+          cursor: not-allowed; 
+          transform: none; 
+        }
         @media (max-width: 640px) {
-          .contact-container { padding: 2rem 1.5rem; }
-          .form-grid { grid-template-columns: 1fr; }
+          .contact-container { 
+            padding: 2rem 1.5rem; 
+          }
+          .form-grid { 
+            grid-template-columns: 1fr; 
+          }
         }
       `}</style>
 
