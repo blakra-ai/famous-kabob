@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import './App.css';
 import i18n from './i18n';
-
-import Home from './components/Home';
-import Menu from './components/Menu';
-import Catering from './components/Catering';
-import About from './components/About';
-import Contact from './components/Contact';
+import Home from './components/Home.jsx';
+import Menu from './components/Menu.jsx';
+import Catering from './components/Catering.jsx';
+import About from './components/About.jsx';
+import Contact from './components/Contact.jsx';
 
 const LANG = {
   en: {
