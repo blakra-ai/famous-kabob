@@ -60,6 +60,7 @@ export async function sendBookingEmails(requestType, formData) {
     customer_name: formData.name,
     customer_phone: formData.phone,
     customer_email: formData.email,
+    to_email:"blakra.usa@gmail.com",
     event_date: formattedDate,
     event_time: formattedTime,
     event_location: formData.location || (requestType === 'TABLE' ? 'Famous Kabob Restaurant' : 'Not specified'),
