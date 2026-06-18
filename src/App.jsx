@@ -67,7 +67,7 @@ function Footer({ lang }) {
   const t = LANG[lang];
   return (
     <footer className="site-footer">
-      <h2 className="footer-logo">FAMOUS KABOB</h2>
+      <h2 className="footer-logo">KABAB HOUSE</h2>
       <p style={{ color: '#e8d6a8', margin: '0.25rem 0 1rem', fontSize: '0.9rem', letterSpacing: '0.15em' }}>
         {t.footerText}
       </p>
@@ -97,7 +97,7 @@ function Footer({ lang }) {
       </div>
 
       <p style={{ borderTop: '1px solid rgba(212,175,55,0.15)', paddingTop: '1rem', marginTop: '1rem', fontSize: '0.8rem', color: '#8a8270' }}>
-        © {new Date().getFullYear()} Famous Kabob. {t.rights}
+        © {new Date().getFullYear()} Kabab House. Built and designed by blakra. {t.rights}
       </p>
     </footer>
   );

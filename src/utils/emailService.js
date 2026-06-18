@@ -2,109 +2,171 @@
 import emailjs from '@emailjs/browser';
 
 // ============================================================
-// EMAILJS CONFIGURATION - YOUR ACTUAL IDS
+// EMAILJS CONFIGURATION
+// Prefer environment variables; falls back to literals so this
+// keeps working if env isn't set up yet.
+// (Note: these values are public by design — they ship to the
+//  browser. Protect them via "Allowed Origins" in the EmailJS
+//  dashboard, NOT by hiding them.)
 // ============================================================
+const env = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+
 const EMAILJS_CONFIG = {
-  SERVICE_ID: 'service_dgmx2lv',
-  RESTAURANT_TEMPLATE_ID: 'template_qbizayc',    // Contact us ID
-  CUSTOMER_TEMPLATE_ID: 'template_xwnumwd',      // Auto reply ID
-  PUBLIC_KEY: 'gQ8uMqnz-vfvi6W2e'
+  SERVICE_ID: env.VITE_EMAILJS_SERVICE_ID || 'service_dgmx2lv',
+  RESTAURANT_TEMPLATE_ID: env.VITE_EMAILJS_RESTAURANT_TEMPLATE_ID || 'template_qbizayc', // Contact us
+  CUSTOMER_TEMPLATE_ID: env.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || 'template_xwnumwd',     // Auto reply
+  PUBLIC_KEY: env.VITE_EMAILJS_PUBLIC_KEY || 'gQ8uMqnz-vfvi6W2e',
 };
-// ============================================================
+
+const REQUEST_TYPE_LABELS = {
+  CATERING: 'Catering Request',
+  TABLE: 'Table Reservation',
+};
+
+const REPLY_TIMEFRAMES = {
+  CATERING: 'We will get back to you within 12 hours',
+  TABLE: 'We will get back to you within 30 minutes to 1 hour',
+};
+
+// ---------- helpers ----------
+
+function formatDate(dateStr) {
+  if (!dateStr) return 'Not specified';
+  const d = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return 'Not specified';
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+function formatTime(timeStr) {
+  if (!timeStr) return 'Not specified';
+  const d = new Date(`2000-01-01T${timeStr}`);
+  if (Number.isNaN(d.getTime())) return 'Not specified';
+  return d.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+}
+
+function buildMailto(toEmail, subject, body) {
+  return `mailto:${toEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// Send with a timeout + one retry, so transient network errors don't fail the booking.
+async function sendWithRetry(serviceId, templateId, params, publicKey, { retries = 1, timeoutMs = 15000 } = {}) {
+  let lastError;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await Promise.race([
+        emailjs.send(serviceId, templateId, params, publicKey),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Email request timed out')), timeoutMs)
+        ),
+      ]);
+    } catch (err) {
+      lastError = err;
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1))); // simple backoff
+      }
+    }
+  }
+  throw lastError;
+}
+
+// ---------- main ----------
 
 /**
- * Sends dual emails for booking requests
- * @param {'CATERING'|'TABLE'} requestType 
+ * Sends dual emails for booking requests.
+ * @param {'CATERING'|'TABLE'} requestType
  * @param {Object} formData - Form submission data
- * @returns {Promise} - Results of both email sends
+ * @returns {Promise<{success: boolean, restaurantSent: boolean, customerSent: boolean, errors: Error[]}>}
  */
 export async function sendBookingEmails(requestType, formData) {
-  const requestTypeLabels = {
-    CATERING: 'Catering Request',
-    TABLE: 'Table Reservation'
-  };
+  // ---- validation ----
+  if (!REQUEST_TYPE_LABELS[requestType]) {
+    throw new Error(`Invalid requestType: "${requestType}". Expected CATERING or TABLE.`);
+  }
+  if (!formData || typeof formData !== 'object') {
+    throw new Error('formData is required.');
+  }
+  if (!formData.name || !formData.email) {
+    throw new Error('Customer name and email are required.');
+  }
 
-  // Different reply timeframes based on request type
-  const replyTimeframes = {
-    CATERING: 'We will get back to you within 12 hours',
-    TABLE: 'We will get back to you within 30 minutes to 1 hour'
-  };
+  const label = REQUEST_TYPE_LABELS[requestType];
+  const formattedDate = formatDate(formData.date);
+  const formattedTime = formatTime(formData.time);
 
-  // Format date and time for better display
-  const formattedDate = formData.date
-    ? new Date(formData.date + 'T00:00:00').toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      })
-    : 'Not specified';
-
-  const formattedTime = formData.time
-    ? new Date(`2000-01-01T${formData.time}`).toLocaleTimeString('en-US', {
-        hour: '2-digit', minute: '2-digit', hour12: true
-      })
-    : 'Not specified';
-
-  // Admin confirmation links for "Yes Confirm" and "Edit Time" buttons
-  const confirmSubject = encodeURIComponent(`${requestTypeLabels[requestType]} CONFIRMED`);
-  const confirmBody = encodeURIComponent(
-    `Hello ${formData.name},\n\nYour ${requestTypeLabels[requestType].toLowerCase()} for ${formattedDate} at ${formattedTime} is CONFIRMED.\n\nWe look forward to serving you!\n\nFamous Kabob Restaurant\n(916) 804-7220`
-  );
-  
-  const editSubject = encodeURIComponent(`${requestTypeLabels[requestType]} - Time Adjustment`);
-  const editBody = encodeURIComponent(
-    `Hello ${formData.name},\n\nRegarding your ${requestTypeLabels[requestType].toLowerCase()} for ${formattedDate} at ${formattedTime}.\n\nWe can accommodate you with a slight time adjustment of about 30 minutes. Would [INSERT NEW TIME] work better for you?\n\nPlease reply to confirm.\n\nFamous Kabob Restaurant\n(916) 804-7220`
+  // ---- admin action links ----
+  const adminConfirmLink = buildMailto(
+    formData.email,
+    `${label} CONFIRMED`,
+    `Hello ${formData.name},\n\nYour ${label.toLowerCase()} for ${formattedDate} at ${formattedTime} is CONFIRMED.\n\nWe look forward to serving you!\n\nFamous Kabob Restaurant\n(916) 804-7220`
   );
 
-  // Shared template parameters for both emails
+  const adminEditLink = buildMailto(
+    formData.email,
+    `${label} - Time Adjustment`,
+    `Hello ${formData.name},\n\nRegarding your ${label.toLowerCase()} for ${formattedDate} at ${formattedTime}.\n\nWe can accommodate you with a slight time adjustment of about 30 minutes. Would [INSERT NEW TIME] work better for you?\n\nPlease reply to confirm.\n\nFamous Kabob Restaurant\n(916) 804-7220`
+  );
+
+  // ---- shared template params ----
   const templateParams = {
-    request_type: requestTypeLabels[requestType],
+    request_type: label,
     customer_name: formData.name,
-    customer_phone: formData.phone,
+    customer_phone: formData.phone || 'Not provided',
     customer_email: formData.email,
     event_date: formattedDate,
     event_time: formattedTime,
     event_location: formData.location || (requestType === 'TABLE' ? 'Famous Kabob Restaurant' : 'Not specified'),
-    guests: formData.guests,
+    guests: formData.guests || 'Not specified',
     service_type: formData.serviceType || (requestType === 'TABLE' ? 'Dine-in Reservation' : 'Catering Service'),
     notes: formData.notes || 'No additional notes provided.',
-    reply_timeframe: replyTimeframes[requestType],
-    
-    // Admin action links - use these in your EmailJS templates as button URLs
-    admin_confirm_link: `mailto:${formData.email}?subject=${confirmSubject}&body=${confirmBody}`,
-    admin_edit_link: `mailto:${formData.email}?subject=${editSubject}&body=${editBody}`,
-    
+    reply_timeframe: REPLY_TIMEFRAMES[requestType],
+    admin_confirm_link: adminConfirmLink,
+    admin_edit_link: adminEditLink,
     submission_time: new Date().toLocaleString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long',
       day: 'numeric', hour: '2-digit', minute: '2-digit',
-      timeZoneName: 'short'
+      timeZoneName: 'short',
     }),
   };
 
-  try {
-    // Send both emails concurrently for maximum speed
-    const [restaurantResult, customerResult] = await Promise.all([
-      // Email 1: Restaurant notification (goes to you)
-      emailjs.send(
-        EMAILJS_CONFIG.SERVICE_ID,
-        EMAILJS_CONFIG.RESTAURANT_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_CONFIG.PUBLIC_KEY
-      ),
-      // Email 2: Customer auto-reply
-      emailjs.send(
-        EMAILJS_CONFIG.SERVICE_ID,
-        EMAILJS_CONFIG.CUSTOMER_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_CONFIG.PUBLIC_KEY
-      )
-    ]);
+  // ---- send both, independently ----
+  const [restaurantOutcome, customerOutcome] = await Promise.allSettled([
+    sendWithRetry(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.RESTAURANT_TEMPLATE_ID, templateParams, EMAILJS_CONFIG.PUBLIC_KEY),
+    sendWithRetry(EMAILJS_CONFIG.SERVICE_ID, EMAILJS_CONFIG.CUSTOMER_TEMPLATE_ID, templateParams, EMAILJS_CONFIG.PUBLIC_KEY),
+  ]);
 
-    console.log('Restaurant notification sent:', restaurantResult.status);
-    console.log('Customer auto-reply sent:', customerResult.status);
+  const restaurantSent = restaurantOutcome.status === 'fulfilled';
+  const customerSent = customerOutcome.status === 'fulfilled';
 
-    return { success: true, restaurantResult, customerResult };
-
-  } catch (error) {
-    console.error('Email sending failed:', error);
-    throw new Error(`Failed to send ${requestType.toLowerCase()} emails: ${error.message}`);
+  const errors = [];
+  if (!restaurantSent) {
+    console.error('Restaurant notification failed:', restaurantOutcome.reason);
+    errors.push(restaurantOutcome.reason);
+  } else {
+    console.log('Restaurant notification sent:', restaurantOutcome.value.status);
   }
+  if (!customerSent) {
+    console.error('Customer auto-reply failed:', customerOutcome.reason);
+    errors.push(customerOutcome.reason);
+  } else {
+    console.log('Customer auto-reply sent:', customerOutcome.value.status);
+  }
+
+  // The restaurant notification is the critical one (it captures the lead).
+  // If it fails, surface that as a hard error to the caller.
+  if (!restaurantSent) {
+    throw new Error(
+      `Failed to send the restaurant notification for ${requestType.toLowerCase()}: ${restaurantOutcome.reason?.message || 'unknown error'}`
+    );
+  }
+
+  return {
+    success: restaurantSent && customerSent,
+    restaurantSent,
+    customerSent,
+    errors,
+  };
 }
